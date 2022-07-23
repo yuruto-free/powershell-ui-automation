@@ -4,7 +4,7 @@
 Add-Type -AssemblyName UIAutomationClient
 Add-Type -AssemblyName UIAutomationTypes
 
-# GUI操作のための準備
+# preparation
 $uiAutomation = [System.Windows.Automation.AutomationElement]
 $tree = [System.Windows.Automation.TreeScope]
 $root = $uiAutomation::RootElement
@@ -30,7 +30,6 @@ $automationPatterns = [ordered]@{
     WindowPattern = [System.Windows.Automation.WindowPattern]::Pattern
 }
 
-# 検索条件生成
 function createCondition([hashtable]$params) {
     [System.Collections.ArrayList]$conditions = @()
     $propertyCondition = [System.Windows.Automation.PropertyCondition]
@@ -153,15 +152,15 @@ function createCondition([hashtable]$params) {
 
     return $condition
 }
-# 操作対象アプリケーションの探索
+
 function searchApps([hashtable]$params) {
-    Start-Sleep -m 500
+    Start-Sleep -m 200
     $condition = createCondition $params
     $apps = $root.FindAll($tree::Children, $condition)
 
     return $apps
 }
-# 操作対象アプリケーションの取得
+
 function getApp([hashtable]$params) {
     $condition = createCondition $params
     $app = $null
@@ -173,21 +172,21 @@ function getApp([hashtable]$params) {
 
     return $app
 }
-# アプリケーション内要素の検索
+
 function searchAllElements([System.Windows.Automation.AutomationElement]$app, [hashtable]$params) {
     $condition = createCondition $params
     $elements = $app.FindAll($tree::Subtree, $condition)
 
     return $elements
 }
-# アプリケーション内要素の取得
+
 function getElement([System.Windows.Automation.AutomationElement]$app, [hashtable]$params) {
     $condition = createCondition $params
     $element = $app.FindFirst($tree::Subtree, $condition)
 
     return $element
 }
-# 実行可能な処理パターンの確認
+
 function checkActionPattern([System.Windows.Automation.AutomationElement]$element) {
     [System.Collections.ArrayList]$patterns = @()
 
@@ -211,6 +210,7 @@ function checkActionPattern([System.Windows.Automation.AutomationElement]$elemen
 Start-Process "calc"
 $params = @{
     Name = "電卓"
+    ClassName = "ApplicationFrameWindow"
 }
 $app = getApp $params
 
@@ -226,6 +226,22 @@ searchAllElements $app @{} | ForEach-Object {
 }
 
 # execute action
+@("num1Button", "plusButton",
+  "num2Button", "plusButton",
+  "num3Button", "plusButton",
+  "num4Button", "plusButton",
+  "num5Button", "plusButton",
+  "num6Button", "plusButton",
+  "num7Button", "plusButton",
+  "num8Button", "plusButton",
+  "num9Button", "equalButton") | ForEach-Object {
+    $element = getElement $app @{AutomationId = $_}
+    $button = $element.GetCurrentPattern($automationPatterns.InvokePattern)
+    $button.Invoke()
+    Start-Sleep -m 150
+}
+Start-Sleep -m 500
+
 $params = @{
     Name = "電卓 を閉じる"
     AutomationId = "Close"
